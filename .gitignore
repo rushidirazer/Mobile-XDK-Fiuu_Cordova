@@ -1,0 +1,9 @@
+node_modules
+/dist
+/.tmp
+.vscode
+/.sass-cache
+/bower_components
+/.*\.DS_Store$
+.DS_Store
+/www

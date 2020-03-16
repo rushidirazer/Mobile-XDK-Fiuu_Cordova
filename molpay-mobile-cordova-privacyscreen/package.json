@@ -1,0 +1,46 @@
+{
+  "name": "molpay-mobile-cordova-privacyscreen",
+  "version": "1.0.0",
+  "description": "Secures app from displaying screenshot in task switchers under Android and iOS. Keeps sensitive information private.",
+  "cordova": {
+    "id": "molpay-mobile-cordova-privacyscreen",
+    "platforms": [
+      "android",
+      "ios"
+    ]
+  },
+  "repository": {},
+  "keywords": [
+    "molpay",
+    "in",
+    "app",
+    "mobile",
+    "asia",
+    "payment",
+    "gateway",
+    "merchant",
+    "service",
+    "ecosystem:cordova",
+    "cordova-android",
+    "cordova-ios"
+  ],
+  "engines": [
+    {
+      "name": "cordova",
+      "version": ">=6.0.0"
+    },
+    {
+      "name": "cordova-android",
+      "version": ">=5.0.0"
+    },
+    {
+      "name": "cordova-ios",
+      "version": ">=4.0.0"
+    }
+  ],
+  "author": "MOLPay Mobile Division <mobile@molpay.com>",
+  "license": "ISC",
+  "bugs": {
+  },
+  "homepage": "https://www.npmjs.com/package/molpay-mobile-cordova-privacyscreen"
+}

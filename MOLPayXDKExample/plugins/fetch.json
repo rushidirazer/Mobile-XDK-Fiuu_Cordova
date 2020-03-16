@@ -1,0 +1,58 @@
+{
+  "cordova-plugin-whitelist": {
+    "source": {
+      "type": "registry",
+      "id": "cordova-plugin-whitelist@^1.3.4"
+    },
+    "is_top_level": true,
+    "variables": {}
+  },
+  "cordova-plugin-inappbrowser": {
+    "source": {
+      "type": "registry",
+      "id": "cordova-plugin-inappbrowser"
+    },
+    "is_top_level": false,
+    "variables": {}
+  },
+  "molpay-mobile-cordova-privacyscreen": {
+    "source": {
+      "type": "registry",
+      "id": "molpay-mobile-cordova-privacyscreen"
+    },
+    "is_top_level": false,
+    "variables": {}
+  },
+  "cordova-save-image-gallery": {
+    "source": {
+      "type": "registry",
+      "id": "cordova-save-image-gallery"
+    },
+    "is_top_level": false,
+    "variables": {}
+  },
+  "cordova-plugin-x-toast": {
+    "source": {
+      "type": "registry",
+      "id": "cordova-plugin-x-toast"
+    },
+    "is_top_level": false,
+    "variables": {}
+  },
+  "cordova-plugin-android-permissions": {
+    "source": {
+      "type": "registry",
+      "id": "cordova-plugin-android-permissions@0.10.0"
+    },
+    "is_top_level": false,
+    "variables": {}
+  },
+  "molpay-mobile-xdk-cordova": {
+    "source": {
+      "type": "local",
+      "path": "/Users/tekjautan/Documents/rms-gitlab/xdk/Cordova/MOLPayXDKExample/node_modules/molpay-mobile-xdk-cordova"
+    },
+    "is_top_level": true,
+    "variables": {}
+  }
+}

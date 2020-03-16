@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="molpay.mobile.xdk.example" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <feature name="Whitelist">
+        <param name="android-package" value="org.apache.cordova.whitelist.WhitelistPlugin" />
+        <param name="onload" value="true" />
+    </feature>
+    <feature name="Permissions">
+        <param name="android-package" value="com.android.plugins.Permissions" />
+    </feature>
+    <feature name="InAppBrowser">
+        <param name="android-package" value="org.apache.cordova.inappbrowser.InAppBrowser" />
+    </feature>
+    <feature name="MOLPayPrivacyScreen">
+        <param name="android-package" value="molpay.mobile.cordova.privacyscreen.MOLPayPrivacyScreen" />
+        <param name="onload" value="true" />
+    </feature>
+    <feature name="SaveImageGallery">
+        <param name="android-package" value="com.agomezmoron.saveImageGallery.SaveImageGallery" />
+    </feature>
+    <feature name="Toast">
+        <param name="android-package" value="nl.xservices.plugins.Toast" />
+    </feature>
+    <name>MOLPayExample</name>
+    <description>
+        A sample Apache Cordova application that implements MOLPay XDK Cordova Plugin.
+    </description>
+    <author email="mobile@molpay.com" href="http://www.molpay.com/v3/">
+        MOLPay Mobile Tech Team
+    </author>
+    <content src="index.html" />
+    <access origin="*" />
+    <allow-navigation href="*" />
+    <allow-intent href="*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <allow-intent href="tel:*" />
+    <allow-intent href="sms:*" />
+    <allow-intent href="mailto:*" />
+    <allow-intent href="geo:*" />
+    <allow-intent href="market:*" />
+    <preference name="loglevel" value="DEBUG" />
+    <preference name="DisallowOverscroll" value="true" />
+    <preference name="AndroidLaunchMode" value="singleTask" />
+</widget>

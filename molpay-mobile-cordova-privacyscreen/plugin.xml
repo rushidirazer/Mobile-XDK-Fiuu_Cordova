@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
+        id="molpay-mobile-cordova-privacyscreen"
+        version="1.0.0">
+
+    <name>MOLPay privacy screen to prevent screenshots</name>
+
+    <engines>
+        <engine name="cordova" version=">=3.4.0"/>
+    </engines>
+
+    <asset src="www/MOLPayPrivacyScreen.js" target="js/MOLPayPrivacyScreen.js"/>
+
+    <js-module src="www/MOLPayPrivacyScreen.js" name="MOLPayPrivacyScreen">
+        <clobbers target="MOLPayPrivacyScreen" />
+    </js-module>
+
+    <platform name="android">
+        <preference name="ENABLE_PRIVACYSCREEN_BELOW_LOLLIPOP" default="true" />
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="MOLPayPrivacyScreen">
+                <param name="android-package" value="molpay.mobile.cordova.privacyscreen.MOLPayPrivacyScreen"/>
+                <param name="onload" value="$ENABLE_PRIVACYSCREEN_BELOW_LOLLIPOP" />
+            </feature>
+        </config-file>
+
+        <source-file src="src/android/MOLPayPrivacyScreen.java" target-dir="src/molpay/mobile/cordova"/>
+    </platform>
+    
+    <platform name="ios">
+        <config-file parent="/*" target="config.xml">
+            <feature name="MOLPayPrivacyScreen">
+                <param name="ios-package" value="MOLPayPrivacyScreen"/>
+                <param name="onload" value="true" />
+            </feature>
+        </config-file>
+        
+        <header-file src="src/ios/MOLPayPrivacyScreen.h"/>
+        <source-file src="src/ios/MOLPayPrivacyScreen.m"/>
+    </platform>
+</plugin>
