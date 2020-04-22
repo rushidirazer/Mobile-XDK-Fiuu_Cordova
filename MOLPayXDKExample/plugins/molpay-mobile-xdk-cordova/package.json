@@ -1,6 +1,6 @@
 {
   "name": "molpay-mobile-xdk-cordova",
-  "version": "3.27.1",
+  "version": "3.29.0",
   "description": "Razer Merchant Services official in-app payment module for Cordova",
   "cordova": {
     "id": "molpay-mobile-xdk-cordova",
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MOLPay/rms-mobile-xdk-cordova.git"
+    "url": "git+https://github.com/RazerMS/rms-mobile-xdk-cordova.git"
   },
   "keywords": [
     "razer",
@@ -45,7 +45,7 @@
   "author": "Razer Merchant Services Mobile Division",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/MOLPay/rms-mobile-xdk-cordova/issues"
+    "url": "https://github.com/RazerMS/rms-mobile-xdk-cordova/issues"
   },
-  "homepage": "https://github.com/MOLPay/rms-mobile-xdk-cordova#readme"
+  "homepage": "https://github.com/RazerMS/rms-mobile-xdk-cordova#readme"
 }

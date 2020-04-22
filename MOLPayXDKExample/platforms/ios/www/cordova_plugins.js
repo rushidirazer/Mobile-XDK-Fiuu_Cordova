@@ -49,6 +49,6 @@ cordova.define('cordova/plugin_list', function(require, exports, module) {
     "molpay-mobile-cordova-privacyscreen": "1.0.0",
     "cordova-save-image-gallery": "0.0.26",
     "cordova-plugin-x-toast": "2.7.2",
-    "molpay-mobile-xdk-cordova": "3.27.1"
+    "molpay-mobile-xdk-cordova": "3.29.0"
   };
 });
