@@ -22,13 +22,13 @@ var app = {
             'mp_currency' : 'MYR',
             'mp_country' : 'MY',  
             'mp_verification_key' : '4445db44bdb60687a8e7f7903a59c3a9',  
-            'mp_channel' : 'multi', 
+            'mp_channel' : 'maybank2u', 
             'mp_bill_description' : 'Bill description',
             'mp_bill_name' : 'Bill name',
             'mp_bill_email' : 'email@email.com',
-            'mp_bill_mobile' : '+60123456789',
+            'mp_bill_mobile' : '01755',
             // 'mp_channel_editing' : false,
-            // 'mp_editing_enabled' : false,
+            'mp_editing_enabled' : true,
             // 'mp_transaction_id' : '', // Optional, required when mp_request_type is 'Status'
             // 'mp_preferred_token' : '', // Optional, set the token id to nominate a preferred token as the default selection
             // 'mp_request_type' : '', // Optional, set 'Status' when performing a transactionRequest
@@ -42,7 +42,7 @@ var app = {
             // 'mp_sandbox_mode': true, // Optional for sandboxed development environment, set boolean value to enable.
             // 'mp_express_mode': true, // Optional, required a valid mp_channel value, this will skip the payment info page and go direct to the payment screen.
             // 'mp_advanced_email_validation_enabled': true, // Optional, enable this for extended email format validation based on W3C standards.
-            // 'mp_advanced_phone_validation_enabled': true, // Optional, enable this for extended phone format validation based on Google i18n standards.
+             'mp_advanced_phone_validation_enabled': true, // Optional, enable this for extended phone format validation based on Google i18n standards.
             // 'mp_bill_name_edit_disabled': true, // Optional, explicitly force disable billing name edit.
             // 'mp_bill_email_edit_disabled': true, // Optional, explicitly force disable billing email edit.
             // 'mp_bill_mobile_edit_disabled': true, // Optional, explicitly force disable billing mobile edit.
