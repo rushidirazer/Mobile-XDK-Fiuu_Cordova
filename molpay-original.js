@@ -23,9 +23,9 @@ NodeList.prototype.remove = HTMLCollection.prototype.remove = function() {
 // console.log = function() {};
 
 // deploy
-var isInternalDebugging = false;
+var isInternalDebugging = true;
 var moduleId = 'molpay-mobile-xdk-cordova';
-var wrapperVersion = '0';
+var wrapperVersion = '1';
 
 // Constants
 var molpaySdkUrl = 'molpay-mobile-xdk-www/index.html';
@@ -149,7 +149,7 @@ var createBankUiWindow = function(base64HtmlString) {
             console.log('onBankUiLoadstop event.url =' + event.url);
         }
 
-        if(event.url.indexOf("intermediate_appTNG-EWALLET.php") > -1){
+        if (event.url.indexOf("intermediate_appTNG-EWALLET.php") > -1 || event.url.indexOf("intermediate_app/processing.php") > -1){
             bankUiWindow.executeScript({
                 code: 'document.getElementById("systembrowserurl").innerHTML'
             },
