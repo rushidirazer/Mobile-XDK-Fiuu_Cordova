@@ -25,7 +25,7 @@ NodeList.prototype.remove = HTMLCollection.prototype.remove = function() {
 // deploy
 var isInternalDebugging = true;
 var moduleId = 'molpay-mobile-xdk-cordova';
-var wrapperVersion = '1';
+var wrapperVersion = '2';
 
 // Constants
 var molpaySdkUrl = 'molpay-mobile-xdk-www/index.html';

@@ -1,4 +1,4 @@
-package molpay.mobile.cordova.privacyscreen;
+package rms.mobile.cordova.privacyscreen;
 
 import org.apache.cordova.*;
 import org.json.JSONArray;
@@ -7,7 +7,7 @@ import org.json.JSONObject;
 import android.view.WindowManager;
 import android.app.Activity;
 
-public class MOLPayPrivacyScreen extends CordovaPlugin {
+public class RMSPrivacyScreen extends CordovaPlugin {
     private static final String ACTION_ENABLE = "enable";
     private static final String ACTION_DISABLE = "disable";
 

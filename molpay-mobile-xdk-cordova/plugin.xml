@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     id="molpay-mobile-xdk-cordova"
-    version="3.29.1">
+    version="3.29.2">
     <name>Razer Merchant Services XDK for Cordova</name>
     <description>Razer Merchant Services official in-app payment module for Cordova</description>
     <author>Razer Merchant Services Mobile Division</author>
@@ -16,7 +16,7 @@
         <clobbers target="molpay" />
     </js-module>
     <dependency id="cordova-plugin-inappbrowser" />
-    <dependency id="molpay-mobile-cordova-privacyscreen" />
+    <dependency id="rms-mobile-cordova-privacyscreen" />
     <dependency id="cordova-save-image-gallery" />
     <dependency id="cordova-plugin-x-toast" />
     <dependency id="cordova-plugin-android-permissions@0.10.0" />
