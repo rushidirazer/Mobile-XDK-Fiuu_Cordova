@@ -1,6 +1,6 @@
 {
   "name": "molpay-mobile-xdk-cordova",
-  "version": "3.29.2",
+  "version": "3.30.0",
   "description": "Razer Merchant Services official in-app payment module for Cordova",
   "cordova": {
     "id": "molpay-mobile-xdk-cordova",
