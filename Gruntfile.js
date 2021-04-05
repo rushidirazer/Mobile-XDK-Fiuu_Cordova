@@ -68,7 +68,8 @@ module.exports = function(grunt) {
             },
             my_target: {
                 files: {
-                    '.tmp/molpay-original.js': ['.tmp/molpay-original.js'] //'molpay-mobile-xdk-cordova/molpay.js': ['molpay-original.js']
+                    '.tmp/molpay-original.js': ['.tmp/molpay-original.js']
+                    // 'molpay-mobile-xdk-cordova/molpay.js': ['molpay-original.js']
                 }
             }
         }
