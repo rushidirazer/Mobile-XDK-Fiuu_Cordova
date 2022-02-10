@@ -25,7 +25,7 @@ NodeList.prototype.remove = HTMLCollection.prototype.remove = function() {
 // deploy
 var isInternalDebugging = false;
 var moduleId = 'molpay-mobile-xdk-cordova';
-var wrapperVersion = '0';
+var wrapperVersion = '1';
 
 // Constants
 var molpaySdkUrl = 'molpay-mobile-xdk-www/index.html';
@@ -168,6 +168,11 @@ var createBankUiWindow = function(base64HtmlString) {
                     bankUiWindow.addEventListener('exit', onBankUIExit);
                 }
             });
+        } else if (event.url.indexOf("atome-my.onelink.me") > -1) {
+            bankUiWindow = window.open(event.url, "_system");
+            bankUiWindow.addEventListener('loadstart', onBankUiLoadstart);
+            bankUiWindow.addEventListener('loadstop', onBankUiLoadstop);
+            bankUiWindow.addEventListener('exit', onBankUIExit);
         }
 
         // Capture MOLPay results
