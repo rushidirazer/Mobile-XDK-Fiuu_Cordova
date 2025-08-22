@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='utf-8'?>
+
+<plugin id="com.fiuu.plugin.cordova" version="1.0.0"
+        xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android">
+  <name>XdkFiuuCordova</name>
+
+  <!-- Make a global window.XdkFiuuCordova -->
+  <js-module src="www/XdkFiuuCordova.js" name="XdkFiuuCordova">
+    <clobbers target="XdkFiuuCordova" />
+  </js-module>
+
+  <platform name="android">
+    <!-- Register the plugin class as a Cordova feature -->
+    <config-file target="res/xml/config.xml" parent="/*">
+      <feature name="XdkFiuuCordova">
+        <param name="android-package" value="com.fiuu.cordova.XdkFiuuCordova" />
+        <param name="onload" value="false" />
+      </feature>
+    </config-file>
+
+    !-- Add tools namespace to manifest root -->
+    <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
+      <manifest xmlns:tools="http://schemas.android.com/tools" />
+    </edit-config>
+
+    <!-- Replace the application theme -->
+    <edit-config file="app/src/main/AndroidManifest.xml"
+                mode="merge"
+                target="/manifest/application">
+      <application
+          android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+          tools:replace="android:theme" />
+    </edit-config>
+
+    <!-- Drop our rules file into the app module -->
+  <resource-file src="proguard-fiuu.pro" target="app/proguard-fiuu.pro" />
+
+  <!-- Append its contents into the main proguard-rules.pro -->
+  <config-file target="app/proguard-rules.pro" parent="/*">
+    <![CDATA[
+# --- BEGIN: Fiuu/MOLPay extra rules ---
+-include proguard-fiuu.pro
+# --- END: Fiuu/MOLPay extra rules ---
+    ]]>
+  </config-file>
+<!-- 
+    <activity
+    android:name="com.molpay.molpayxdk.MOLPayActivity"
+    android:exported="false"
+    android:theme="@style/Theme.AppCompat.Light.NoActionBar" /> -->
+
+    <framework src="androidx.appcompat:appcompat:1.6.1" />
+    <!-- Material often used by payment screens -->
+    <framework src="com.google.android.material:material:1.9.0" />
+    <framework src="src/android/build-extras.gradle"
+             custom="true"
+             type="gradleReference" />
+
+
+    <!-- Your Java file -->
+    <source-file src="src/android/XdkFiuuCordova.java"
+                 target-dir="src/com/fiuu/cordova" />
+  </platform>
+</plugin>

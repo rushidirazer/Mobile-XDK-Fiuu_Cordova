@@ -1,0 +1,15 @@
+// This file is automatically applied by Cordova if referenced in plugin.xml
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        // Add custom repos here:
+        maven { url "https://jitpack.io" }
+    }
+}
+
+dependencies {
+    // Example Maven dependency (same as implementation 'group:artifact:version')
+    implementation 'com.github.FiuuPayment:Mobile-XDK-Fiuu_Android_Library:+'
+}
