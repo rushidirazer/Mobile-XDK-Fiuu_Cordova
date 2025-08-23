@@ -19,7 +19,7 @@
       </feature>
     </config-file>
 
-    !-- Add tools namespace to manifest root -->
+    
     <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest">
       <manifest xmlns:tools="http://schemas.android.com/tools" />
     </edit-config>
@@ -34,7 +34,7 @@
     </edit-config>
 
     <!-- Drop our rules file into the app module -->
-  <resource-file src="proguard-fiuu.pro" target="app/proguard-fiuu.pro" />
+  <!-- <resource-file src="proguard-fiuu.pro" target="app/proguard-fiuu.pro" /> -->
 
   <!-- Append its contents into the main proguard-rules.pro -->
   <config-file target="app/proguard-rules.pro" parent="/*">
@@ -44,11 +44,16 @@
 # --- END: Fiuu/MOLPay extra rules ---
     ]]>
   </config-file>
-<!-- 
-    <activity
-    android:name="com.molpay.molpayxdk.MOLPayActivity"
-    android:exported="false"
-    android:theme="@style/Theme.AppCompat.Light.NoActionBar" /> -->
+
+  <!-- Add/merge into release buildType to guarantee minify + rules files -->
+<config-file target="app/build.gradle" parent="/android/buildTypes/release">
+    <![CDATA[
+        minifyEnabled true
+        shrinkResources true
+        proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
+                      'proguard-rules.pro'
+    ]]>
+</config-file>
 
     <framework src="androidx.appcompat:appcompat:1.6.1" />
     <!-- Material often used by payment screens -->

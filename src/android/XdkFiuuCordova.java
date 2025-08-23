@@ -28,7 +28,7 @@ public class XdkFiuuCordova extends CordovaPlugin {
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext){
         if ("startPayment".equals(action)) {
             if (inFlight) {
-                callbackContext.error("Payment already in progress");
+                callbackContext.error("xdebug: plugins - Payment already in progress");
                 return true;
             }
 
@@ -55,12 +55,12 @@ public class XdkFiuuCordova extends CordovaPlugin {
                 paymentDetails.put(key, value);
             }
         } catch (Exception e) {
-            this.activeCb.error("Invalid payment data: " + e.getMessage());
+            this.activeCb.error("xdebug: plugins - Invalid payment data: " + e.getMessage());
         }
 
         // Start MOLPayActivity
         Intent intent;
-        System.out.println("Starting payment with amount: " + paymentDetails.toString());
+        System.out.println("xdebug: plugins - paymentDetails: " + paymentDetails.toString());
 
         if (!paymentDetails.containsKey(MOLPayActivity.mp_channel)) {
             intent = new Intent(activity, com.molpay.molpayxdk.googlepay.ActivityGP.class);
@@ -83,7 +83,7 @@ public class XdkFiuuCordova extends CordovaPlugin {
             String transactionResult = data.getStringExtra(MOLPayActivity.MOLPayTransactionResult);
             this.activeCb.success(transactionResult);
         } else {
-            this.activeCb.error("Payment failed or was canceled");
+            this.activeCb.error("xdebug: plugins - Payment failed or was canceled");
         }
 
         inFlight = false;
