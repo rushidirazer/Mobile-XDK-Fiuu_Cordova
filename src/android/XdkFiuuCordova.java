@@ -4,6 +4,7 @@ import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
 
 import java.util.HashMap;
+import java.util.UUID;
 
 import org.apache.cordova.CallbackContext;
 
@@ -17,6 +18,7 @@ import com.molpay.molpayxdk.googlepay.ActivityGP;
 import androidx.activity.result.ActivityResult;
 import android.content.ActivityNotFoundException;
 import android.app.Activity;
+import java.util.UUID;
 
 /**
  * This class echoes a string back from the native layer
@@ -35,8 +37,15 @@ public class XdkFiuuCordova extends CordovaPlugin {
 
             this.activeCb = callbackContext;
             this.inFlight = true;
-
-            startPayment(args, callbackContext);
+            cordova.getThreadPool().execute(() -> {
+                try {
+                    startPayment(args);
+                } catch (Exception e) {
+                    this.activeCb.error(e.getMessage());
+                    inFlight = false;
+                    activeCb = null;
+                }
+            });
             return true;
         }
         return false; // action not recognized
@@ -60,30 +69,27 @@ public class XdkFiuuCordova extends CordovaPlugin {
         }
     }
 
-    private void startPayment(JSONArray args, CallbackContext callbackContext) {
-        this.activeCb = callbackContext;
+    private void startPayment(JSONArray args) throws Exception {
+
         Activity activity = cordova.getActivity();
 
         HashMap<String, Object> paymentDetails = new HashMap<>();
+        JSONObject data = args.optJSONObject(0);
+        // JSONObject data = args == null ? new JSONObject() : args.getJSONObject(0);
+        verifyRequiredParameter(data);
 
-        try {
-            JSONObject data = args == null ? new JSONObject() : args.getJSONObject(0);
-            verifyRequiredParameter(data);
-
-            for (int i = 0; i < data.names().length(); i++) {
-                String key = data.names().getString(i);
-                Object value = data.get(key);
-                paymentDetails.put(key, value);
-            }
-        } catch (Exception e) {
-            this.activeCb.error(e.getMessage());
-            inFlight = false;
-            return;
+        for (int i = 0; i < data.names().length(); i++) {
+            String key = data.names().getString(i);
+            Object value = data.get(key);
+            paymentDetails.put(key, value);
         }
+
+        paymentDetails.put("client_attempt_uuid", UUID.randomUUID().toString());
+        paymentDetails.put("client_timestamp_ms", System.currentTimeMillis());
 
         // Start MOLPayActivity
         Intent intent;
-        System.out.println("xdebug: plugins - paymentDetails: " + paymentDetails.toString());
+        cordova.setActivityResultCallback(this);
 
         if (!paymentDetails.containsKey(MOLPayActivity.mp_channel)) {
             intent = new Intent(activity, com.molpay.molpayxdk.googlepay.ActivityGP.class);
@@ -91,32 +97,24 @@ public class XdkFiuuCordova extends CordovaPlugin {
             intent = new Intent(activity, MOLPayActivity.class);
         }
 
-        try {
-
-            intent.putExtra(MOLPayActivity.MOLPayPaymentDetails, paymentDetails);
-            cordova.setActivityResultCallback(this);
-            cordova.getActivity().startActivityForResult(intent, REQ_PAYMENT);
-        } catch (ActivityNotFoundException e) {
-            this.activeCb.error("No app found to handle this intent");
-        } catch (Exception e) {
-            this.activeCb.error("Error starting intent: " + e.getMessage());
-        }
+        // Note: These flags help task/UX, not network cache.
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        intent.putExtra(MOLPayActivity.MOLPayPaymentDetails, paymentDetails);
+        cordova.getActivity().startActivityForResult(intent, REQ_PAYMENT);
     }
 
     @Override
     public void onActivityResult(int reqCode, int resultCode, Intent data) {
-        if (reqCode != REQ_PAYMENT || activeCb == null) {
-            this.activeCb.error("xdebug: plugins - payment failed");
+        if (reqCode != REQ_PAYMENT) {
+            this.activeCb.error("payment failed");
             return;
         }
-
-        JSONObject response = new JSONObject();
 
         if (data != null && data.hasExtra(MOLPayActivity.MOLPayTransactionResult)) {
             String transactionResult = data.getStringExtra(MOLPayActivity.MOLPayTransactionResult);
             this.activeCb.success(transactionResult);
         } else {
-            this.activeCb.error("xdebug: plugins - Payment failed or was canceled");
+            this.activeCb.error("Payment failed or was canceled");
         }
 
         inFlight = false;

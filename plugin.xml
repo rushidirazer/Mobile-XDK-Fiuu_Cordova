@@ -34,7 +34,7 @@
     </edit-config>
 
     <!-- Drop our rules file into the app module -->
-  <!-- <resource-file src="proguard-fiuu.pro" target="app/proguard-fiuu.pro" /> -->
+  <resource-file src="proguard-fiuu.pro" target="app/proguard-fiuu.pro" />
 
   <!-- Append its contents into the main proguard-rules.pro -->
   <config-file target="app/proguard-rules.pro" parent="/*">
