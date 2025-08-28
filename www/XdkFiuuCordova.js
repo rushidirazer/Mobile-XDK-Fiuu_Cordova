@@ -1,7 +1,22 @@
 var exec = require('cordova/exec');
 
+function toJsonErr(e) {
+  if (typeof e === 'string') return { error: e };
+  if (e && typeof e === 'object') return e;
+  return { error: String(e) };
+}
+
+function errorAsStringCb(cb) {
+  return function (err) {
+    if (typeof cb === 'function') {
+      try { cb(JSON.stringify(toJsonErr(err))); }
+      catch (_) { cb(JSON.stringify({ Error: 'stringify failed' })); }
+    }
+  };
+}
+
 exports.startPayment = function (arg0, success, error) {
-    exec(success, error, 'XdkFiuuCordova', 'startPayment', [arg0]);
+    exec(success, errorAsStringCb(error), 'XdkFiuuCordova', 'startPayment', [arg0]);
 };
 
 
