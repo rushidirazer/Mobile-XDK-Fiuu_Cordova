@@ -1,16 +1,16 @@
 var exec = require('cordova/exec');
 
 function toJsonErr(e) {
-  if (typeof e === 'string') return { error: e };
+  if (typeof e === 'string') return { Error: e };
   if (e && typeof e === 'object') return e;
-  return { error: String(e) };
+  return { Error: String(e) };
 }
 
 function errorAsStringCb(cb) {
   return function (err) {
     if (typeof cb === 'function') {
       try { cb(JSON.stringify(toJsonErr(err))); }
-      catch (_) { cb(JSON.stringify({ Error: 'stringify failed' })); }
+      catch (_) { cb(JSON.stringify(toJsonErr('stringify failed'))); }
     }
   };
 }

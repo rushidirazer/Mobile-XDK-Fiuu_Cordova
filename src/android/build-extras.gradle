@@ -11,5 +11,7 @@ allprojects {
 
 dependencies {
     // Example Maven dependency (same as implementation 'group:artifact:version')
-    implementation 'com.github.FiuuPayment:Mobile-XDK-Fiuu_Android_Library:+'
+    implementation 'com.github.FiuuPayment:Mobile-XDK-Fiuu_Android_Library:3.34.24'
+    // crash : 20,19,18,17,16,15
+    // ok : 14
 }

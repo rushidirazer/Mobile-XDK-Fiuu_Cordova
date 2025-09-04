@@ -1,54 +1,245 @@
 package com.fiuu.cordova;
 
-import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.PluginResult;
+import android.content.Intent;
+import android.util.Log;
 
 import java.util.HashMap;
 import java.util.UUID;
 
 import org.apache.cordova.CallbackContext;
-
-import org.json.JSONException;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import android.content.Intent;
+import org.apache.cordova.CordovaInterface;
+import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaWebView;
+import org.apache.cordova.PluginResult;
 import com.molpay.molpayxdk.MOLPayActivity;
 import com.molpay.molpayxdk.googlepay.ActivityGP;
-import androidx.activity.result.ActivityResult;
-import android.content.ActivityNotFoundException;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import android.app.Activity;
-import java.util.UUID;
+import android.os.Bundle;
 
-/**
- * This class echoes a string back from the native layer
- */
 public class XdkFiuuCordova extends CordovaPlugin {
-    private static final int REQ_PAYMENT = 9001;
-    private CallbackContext activeCb;
-    private boolean inFlight = false;
 
-    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
+    private static final String TAG = "xdebug : ";
+    private static final int REQ_PAYMENT = 1234;
+    private volatile boolean waiting = false;
+    private volatile boolean expectingDeepLink = false;
+    private volatile boolean deepLinkHandled = false;
+
+    // Keep state across pause/resume
+    private volatile boolean wasBackgrounded = false;
+    private JSONArray pendingArgs = null; // what to resume with
+    private CallbackContext activeCb = null; // callback to finish later
+
+    @Override
+    public boolean execute(String action, JSONArray args, CallbackContext cb) throws JSONException {
         if ("startPayment".equals(action)) {
-            if (inFlight) {
-                callbackContext.error("xdebug: plugins - Payment already in progress");
-                return true;
-            }
-
-            this.activeCb = callbackContext;
-            this.inFlight = true;
-            cordova.getThreadPool().execute(() -> {
-                try {
-                    startPayment(args);
-                } catch (Exception e) {
-                    this.activeCb.error(e.getMessage());
-                    inFlight = false;
-                    activeCb = null;
-                }
-            });
+            startPaymentSafely(args, cb);
             return true;
         }
-        return false; // action not recognized
+
+        return false;
+    }
+
+    // Called when app goes to background
+    @Override
+    public void onPause(boolean multitasking) {
+        super.onPause(multitasking);
+        wasBackgrounded = true;
+        // emit("pause", null);
+    }
+
+    // Called when app returns to foreground
+    @Override
+    public void onResume(boolean multitasking) {
+        System.out.println(TAG + "onResume");
+        super.onResume(multitasking);
+        // emit("resume", null);
+
+        if (wasBackgrounded) {
+            wasBackgrounded = false;
+            System.out.println(TAG + "wasBackgrounded");
+
+            // If you queued work while backgrounded, resume it here
+            if (pendingArgs != null) {
+                final JSONArray toRun = pendingArgs;
+                pendingArgs = null;
+                System.out.println(TAG + "onResume - " + toRun.toString());
+                cordova.getActivity().runOnUiThread(() -> {
+                    try {
+                        startPaymentInternal(toRun);
+                    } catch (Exception e) {
+                        Log.e(TAG, "resume->startPayment error", e);
+                        if (activeCb != null)
+                            activeCb.error(e.getMessage());
+                        activeCb = null;
+                    }
+                });
+            }
+        }
+    }
+
+    @Override
+    public void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        dumpIntent("xdebug:onNewIntent", intent); // <— add this
+        // emit("newIntent", intent != null ? jsonOfIntent(intent) : null);
+
+        if (!waiting || intent == null || intent.getData() == null)
+            return;
+
+        handleDeepLinkResult(intent);
+    }
+
+    private void handleDeepLinkResult(Intent intent) {
+        try {
+            // android.net.Uri uri = intent.getData();
+            // if (uri == null)
+            //     return;
+
+            System.out.println(TAG + "handleDeepLinkResult - " + intent.toString());
+            // Example: myapp://payresult?status=success&txid=123&message=OK
+            // String status = uri.getQueryParameter("status");
+            // String txid = uri.getQueryParameter("txid");
+            // String msg = uri.getQueryParameter("message");
+
+            // JSONObject payload = new JSONObject();
+            // payload.put("source", "deeplink");
+            // payload.put("status", status != null ? status : "unknown");
+            // if (txid != null)
+            //     payload.put("txid", txid);
+            // if (msg != null)
+            //     payload.put("message", msg);
+            // payload.put("uri", uri.toString());
+
+            if (activeCb != null) {
+                deepLinkHandled = true;
+                waiting = false;
+                expectingDeepLink = false;
+                activeCb.success(intent.getDataString());
+                // if ("success".equalsIgnoreCase(status)) {
+                //     activeCb.success(payload.toString());
+                // } else {
+                //     activeCb.error(payload.toString());
+                // }
+                activeCb = null;
+            }
+        } catch (Exception e) {
+            if (activeCb != null) {
+                deepLinkHandled = true;
+                waiting = false;
+                expectingDeepLink = false;
+                activeCb.error("Deeplink parsing error: " + e.getMessage());
+                activeCb = null;
+            }
+        }
+    }
+
+    private static void dumpIntent(String tag, Intent intent) {
+        if (intent == null) {
+            System.out.println(tag + " <null intent>");
+            return;
+        }
+        System.out.println(tag + " action=" + intent.getAction() + " data=" + intent.getDataString());
+
+        if (intent.getExtras() != null) {
+            Bundle b = intent.getExtras();
+            for (String k : b.keySet()) {
+                Object v = b.get(k);
+                System.out.println(tag + " extra[" + k + "]=" + String.valueOf(v));
+            }
+        }
+    }
+
+    // Get result back from your activity
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        dumpIntent("xdebug:onActivityResult", data); // <— add this
+        System.out.println(TAG + "onActivityResult - requestCode " + requestCode + " - resultCode " + resultCode
+                + " - waiting: " + waiting);
+        if (requestCode != REQ_PAYMENT) {
+            super.onActivityResult(requestCode, resultCode, data);
+            return;
+        }
+
+        // If we already handled the deeplink, ignore any straggler result
+        if (deepLinkHandled) {
+            return;
+        }
+
+        if (resultCode == Activity.RESULT_OK && data != null
+                && data.hasExtra(MOLPayActivity.MOLPayTransactionResult)) {
+            String transactionResult = data.getStringExtra(MOLPayActivity.MOLPayTransactionResult);
+            if (activeCb != null) {
+                waiting = false;
+                expectingDeepLink = false;
+                activeCb.success(transactionResult);
+                activeCb = null;
+            }
+            return;
+
+        }
+
+        // RESULT_CANCELED (0) is common when the real result comes via deeplink.
+        // If we’re expecting a deeplink, DO NOT fail here — keep the callback open.
+        if (expectingDeepLink) {
+            // Optionally start a short timeout as a safety net.
+            startDeepLinkGraceTimeout();
+            return;
+        }
+
+        // Otherwise treat as a real cancel/failure
+        if (activeCb != null) {
+            waiting = false;
+            activeCb.error("Payment failed or was canceled");
+            activeCb = null;
+        }
+    }
+
+    private void startDeepLinkGraceTimeout() {
+        // e.g. 20 seconds
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            if (waiting && expectingDeepLink && !deepLinkHandled && activeCb != null) {
+                waiting = false;
+                expectingDeepLink = false;
+                activeCb.error("Payment canceled or no deeplink received");
+                activeCb = null;
+            }
+        }, 20000);
+    }
+
+    // ---- Helpers ----
+
+    private void startPaymentSafely(JSONArray args, CallbackContext cb) {
+        this.activeCb = cb;
+        System.out.println(TAG + "startPaymentSafely" + args.toString());
+
+        // If the app is backgrounded right now, queue and wait for onResume
+        // (Android blocks background activity launches)
+        if (cordova.getActivity().isFinishing()) {
+            cb.error("Activity finishing; try again.");
+            return;
+        }
+
+        if (wasBackgrounded) {
+            this.pendingArgs = args;
+            keepCallback(cb);
+            emit("queued", obj("reason", "background"));
+            return;
+        }
+
+        // Foreground → launch on UI thread
+        cordova.getActivity().runOnUiThread(() -> {
+            try {
+                startPaymentInternal(args);
+            } catch (Exception e) {
+                if (activeCb != null)
+                    activeCb.error(e.getMessage());
+                activeCb = null;
+            }
+        });
     }
 
     private String checkMissing(JSONObject obj, String... requiredKeys) {
@@ -69,13 +260,13 @@ public class XdkFiuuCordova extends CordovaPlugin {
         }
     }
 
-    private void startPayment(JSONArray args) throws Exception {
-
+    private void startPaymentInternal(JSONArray args) throws Exception {
+        // Build your intent and launch; example:
         Activity activity = cordova.getActivity();
+        System.out.println(TAG + "startPaymentInternal");
 
         HashMap<String, Object> paymentDetails = new HashMap<>();
         JSONObject data = args.optJSONObject(0);
-        // JSONObject data = args == null ? new JSONObject() : args.getJSONObject(0);
         verifyRequiredParameter(data);
 
         for (int i = 0; i < data.names().length(); i++) {
@@ -90,41 +281,81 @@ public class XdkFiuuCordova extends CordovaPlugin {
         // Start MOLPayActivity
         Intent intent;
         cordova.setActivityResultCallback(this);
+        // waiting = true;
+        // We expect many wallets to return via deeplink:
+        expectingDeepLink = true;
+        deepLinkHandled = false;
+        waiting = true;
 
         if (!paymentDetails.containsKey(MOLPayActivity.mp_channel)) {
-            intent = new Intent(activity, com.molpay.molpayxdk.googlepay.ActivityGP.class);
+            paymentDetails.put(MOLPayActivity.mp_gpay_channel, new String[] { "CC", "TNG-EWALLET", "SHOPEEPAY" });
+            intent = new Intent(activity, ActivityGP.class);
         } else {
             intent = new Intent(activity, MOLPayActivity.class);
         }
 
         // Note: These flags help task/UX, not network cache.
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        // add extras from args if needed…
         intent.putExtra(MOLPayActivity.MOLPayPaymentDetails, paymentDetails);
+        // add extras from args if needed…
         cordova.getActivity().startActivityForResult(intent, REQ_PAYMENT);
+
+        // Keep callback open until onActivityResult
+        if (activeCb != null)
+            keepCallback(activeCb);
     }
 
-    @Override
-    public void onActivityResult(int reqCode, int resultCode, Intent data) {
-        if (reqCode != REQ_PAYMENT) {
-            this.activeCb.error("payment failed");
+    private void keepCallback(CallbackContext cb) {
+        PluginResult pr = new PluginResult(PluginResult.Status.NO_RESULT);
+        pr.setKeepCallback(true);
+        cb.sendPluginResult(pr);
+    }
+
+    private void emit(String type, JSONObject data) {
+        System.out.println(TAG + "emit: " + type);
+        if (activeCb == null)
             return;
+        System.out.println(TAG + "emit: " + activeCb.toString());
+        JSONObject evt = new JSONObject();
+        try {
+            evt.put("type", type);
+            if (data != null)
+                evt.put("data", data);
+        } catch (JSONException ignored) {
+        }
+        PluginResult pr = new PluginResult(PluginResult.Status.OK, evt);
+        pr.setKeepCallback(true);
+        activeCb.sendPluginResult(pr);
+    }
+
+    private static JSONObject obj(String k, String v) {
+        JSONObject o = new JSONObject();
+        try {
+            o.put(k, v);
+        } catch (JSONException ignored) {
+        }
+        return o;
+    }
+
+    private static JSONObject jsonOfIntent(Intent intent) {
+        System.out.println(TAG + "jsonOfIntent");
+        JSONObject o = new JSONObject();
+        try {
+            o.put("data", String.valueOf(intent.getData()));
+            o.put("action", intent.getAction());
+        } catch (JSONException ignored) {
         }
 
-        if (data != null && data.hasExtra(MOLPayActivity.MOLPayTransactionResult)) {
-            String transactionResult = data.getStringExtra(MOLPayActivity.MOLPayTransactionResult);
-            this.activeCb.success(transactionResult);
-        } else {
-            this.activeCb.error("Payment failed or was canceled");
-        }
-
-        inFlight = false;
-        activeCb = null;
+        System.out.println(TAG + "jsonOfIntent Data: " + o.toString());
+        return o;
     }
 
     @Override
     public void onReset() {
+        System.out.println(TAG + "onReset: ");
         // Dipanggil bila WebView reload — pastikan clear state
-        inFlight = false;
+        waiting = false;
         activeCb = null;
         super.onReset();
     }

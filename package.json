@@ -1,12 +1,23 @@
 {
-  "name": "xdkfiuucordova",
+  "name": "fiuuxdk-cordova-plugin",
   "version": "4.0.0",
   "main": "index.js",
+  "cordova": {
+    "id": "fiuuxdk-cordova-plugin",
+    "platforms": ["android"]
+  },
+  "files": [
+    "www/", 
+    "src/", 
+    "plugin.xml", 
+    "proguard-fiuu.pro", 
+    "README.md"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": ["fiuu","fiuuxdk","cordova", "ecosystem:cordova", "android", "payment"],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "Fiuu XDK Cordova Plugin"
 }

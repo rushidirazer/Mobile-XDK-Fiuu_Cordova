@@ -1,0 +1,259 @@
+package com.fiuu.cordova;
+
+import android.content.Intent;
+import android.util.Log;
+
+import java.util.HashMap;
+import java.util.UUID;
+
+import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaInterface;
+import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaWebView;
+import org.apache.cordova.PluginResult;
+import com.molpay.molpayxdk.MOLPayActivity;
+import com.molpay.molpayxdk.googlepay.ActivityGP;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import android.app.Activity;
+
+public class XdkFiuuCordova extends CordovaPlugin {
+
+    private static final String TAG = "xdebug : ";
+    private static final int REQ_PAYMENT = 1234;
+    private volatile boolean waiting = false;
+
+    // Keep state across pause/resume
+    private volatile boolean wasBackgrounded = false;
+    private JSONArray pendingArgs = null;      // what to resume with
+    private CallbackContext activeCb = null;   // callback to finish later
+    // private CallbackContext activeCb = null;    // optional: JS event stream
+
+    @Override
+    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
+        super.initialize(cordova, webView);
+        Log.d(TAG, "initialize");
+    }
+
+    @Override
+    public boolean execute(String action, JSONArray args, CallbackContext cb) throws JSONException {
+        if ("startPayment".equals(action)) {
+            startPaymentSafely(args, cb);
+            return true;
+        }
+        // if ("listen".equals(action)) {
+        //     // Optional: let JS subscribe to lifecycle/events
+        //     this.activeCb = cb;
+        //     PluginResult pr = new PluginResult(PluginResult.Status.NO_RESULT);
+        //     pr.setKeepCallback(true);
+        //     cb.sendPluginResult(pr);
+        //     return true;
+        // }
+        return false;
+    }
+
+    // Called when app goes to background
+    @Override
+    public void onPause(boolean multitasking) {
+        super.onPause(multitasking);
+        wasBackgrounded = true;
+        emit("pause", null);
+    }
+
+    // Called when app returns to foreground
+    @Override
+    public void onResume(boolean multitasking) {
+        System.out.println(TAG+"onResume");
+        super.onResume(multitasking);
+        emit("resume", null);
+
+        if (wasBackgrounded) {
+            wasBackgrounded = false;
+        System.out.println(TAG+"wasBackgrounded");
+
+            // If you queued work while backgrounded, resume it here
+            if (pendingArgs != null) {
+                final JSONArray toRun = pendingArgs;
+                pendingArgs = null;
+                System.out.println(TAG+"onResume - "+toRun.toString());
+                cordova.getActivity().runOnUiThread(() -> {
+                    try {
+                        startPaymentInternal(toRun);
+                    } catch (Exception e) {
+                        Log.e(TAG, "resume->startPayment error", e);
+                        if (activeCb != null) activeCb.error(e.getMessage());
+                        activeCb = null;
+                    }
+                });
+            }
+        }
+    }
+
+    // If you expect deep links or notification taps
+    @Override
+    public void onNewIntent(Intent intent) {
+        System.out.println(TAG+"onNewIntent"+" - waiting: "+waiting);
+        super.onNewIntent(intent);
+        // read extras / data if needed, then maybe resume flow
+        emit("newIntent", intent != null ? jsonOfIntent(intent) : null);
+    }
+
+    // Get result back from your activity
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        System.out.println(TAG+"onActivityResult - requestCode "+requestCode+" - resultCode "+resultCode+" - waiting: "+waiting);
+        if (requestCode == REQ_PAYMENT || !waiting) {
+            if (activeCb != null) {
+                waiting = false;
+                if (resultCode == Activity.RESULT_OK && data != null && data.hasExtra(MOLPayActivity.MOLPayTransactionResult)) {
+                    String transactionResult = data.getStringExtra(MOLPayActivity.MOLPayTransactionResult);
+                    this.activeCb.success(transactionResult);
+                } else {
+                    this.activeCb.error("Payment failed or was canceled");
+                }
+                activeCb = null; // finalise
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    // ---- Helpers ----
+
+    private void startPaymentSafely(JSONArray args, CallbackContext cb) {
+        this.activeCb = cb;
+        System.out.println(TAG+"startPaymentSafely"+args.toString());
+
+        // If the app is backgrounded right now, queue and wait for onResume
+        // (Android blocks background activity launches)
+        if (cordova.getActivity().isFinishing()) {
+            cb.error("Activity finishing; try again.");
+            return;
+        }
+
+        if (wasBackgrounded) {
+            this.pendingArgs = args;
+            keepCallback(cb);
+            emit("queued", obj("reason", "background"));
+            return;
+        }
+
+        // Foreground → launch on UI thread
+        cordova.getActivity().runOnUiThread(() -> {
+            try {
+                startPaymentInternal(args);
+            } catch (Exception e) {
+                if (activeCb != null) activeCb.error(e.getMessage());
+                activeCb = null;
+            }
+        });
+    }
+
+    private String checkMissing(JSONObject obj, String... requiredKeys) {
+        for (String key : requiredKeys) {
+            if (!obj.has(key) || obj.isNull(key)) {
+                return key;
+            }
+        }
+        return null;
+    }
+
+    private void verifyRequiredParameter(JSONObject data) throws Exception {
+        String missing = checkMissing(data, "mp_username",
+                "mp_password", "mp_merchant_ID", "mp_app_name", "mp_verification_key", "mp_amount", "mp_order_ID",
+                "mp_currency", "mp_country");
+        if (missing != null) {
+            throw new Exception("Missing required parameter");
+        }
+    }
+
+    private void startPaymentInternal(JSONArray args) throws Exception {
+        // Build your intent and launch; example:
+        Activity activity = cordova.getActivity();
+        System.out.println(TAG+"startPaymentInternal");
+
+        HashMap<String, Object> paymentDetails = new HashMap<>();
+        JSONObject data = args.optJSONObject(0);
+        verifyRequiredParameter(data);
+
+        for (int i = 0; i < data.names().length(); i++) {
+            String key = data.names().getString(i);
+            Object value = data.get(key);
+            paymentDetails.put(key, value);
+        }
+
+        paymentDetails.put("client_attempt_uuid", UUID.randomUUID().toString());
+        paymentDetails.put("client_timestamp_ms", System.currentTimeMillis());
+
+        // Start MOLPayActivity
+        Intent intent;
+        cordova.setActivityResultCallback(this);
+        waiting = true;
+
+        if (!paymentDetails.containsKey(MOLPayActivity.mp_channel)) {
+            paymentDetails.put(MOLPayActivity.mp_gpay_channel, new String[] { "CC" , "TNG-EWALLET" , "SHOPEEPAY" });
+            intent = new Intent(activity, ActivityGP.class);
+        } else {
+            intent = new Intent(activity, MOLPayActivity.class);
+        }
+
+        // Note: These flags help task/UX, not network cache.
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        // add extras from args if needed…
+        intent.putExtra(MOLPayActivity.MOLPayPaymentDetails, paymentDetails);
+        // add extras from args if needed…
+        cordova.getActivity().startActivityForResult( intent, REQ_PAYMENT);
+
+        // Keep callback open until onActivityResult
+        // if (activeCb != null) keepCallback(activeCb);
+    }
+
+    private void keepCallback(CallbackContext cb) {
+        PluginResult pr = new PluginResult(PluginResult.Status.NO_RESULT);
+        pr.setKeepCallback(true);
+        cb.sendPluginResult(pr);
+    }
+
+    private void emit(String type, JSONObject data) {
+        System.out.println(TAG+"emit: "+type);
+        if (activeCb == null) return;
+        System.out.println(TAG+"emit: "+activeCb.toString());
+        JSONObject evt = new JSONObject();
+        try {
+            evt.put("type", type);
+            if (data != null) evt.put("data", data);
+        } catch (JSONException ignored) {}
+        PluginResult pr = new PluginResult(PluginResult.Status.OK, evt);
+        pr.setKeepCallback(true);
+        activeCb.sendPluginResult(pr);
+    }
+
+    private static JSONObject obj(String k, String v) {
+        JSONObject o = new JSONObject();
+        try { o.put(k, v); } catch (JSONException ignored) {}
+        return o;
+    }
+
+    private static JSONObject jsonOfIntent(Intent intent) {
+        System.out.println(TAG+"jsonOfIntent");
+        JSONObject o = new JSONObject();
+        try {
+            o.put("data", String.valueOf(intent.getData()));
+            o.put("action", intent.getAction());
+        } catch (JSONException ignored) {}
+
+        System.out.println(TAG+"jsonOfIntent Data: "+o.toString());
+        return o;
+    }
+
+    @Override
+    public void onReset() {
+        System.out.println(TAG+"onReset: ");
+        // Dipanggil bila WebView reload — pastikan clear state
+        waiting = false;
+        activeCb = null;
+        super.onReset();
+    }
+}

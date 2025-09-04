@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- AppCompat DayNight, no action bar -->
+  <style name="Theme.FiuuXdk.Light" parent="Theme.AppCompat.DayNight">
+    <!-- If you define colors, reference them here -->
+    <!-- <item name="colorPrimary">@color/fiuu_primary</item>
+    <item name="colorAccent">@color/fiuu_accent</item> -->
+
+    <!-- Keep content below status bar -->
+    <item name="android:windowNoTitle">true</item>
+    <item name="windowActionBar">true</item>
+    <item name="android:fitsSystemWindows">true</item>
+
+    <!-- Optional system bar colors (API 21+) -->
+    <!-- <item name="android:statusBarColor">@color/fiuu_status</item>
+    <item name="android:navigationBarColor">@color/fiuu_nav</item> -->
+  </style>
+</resources>

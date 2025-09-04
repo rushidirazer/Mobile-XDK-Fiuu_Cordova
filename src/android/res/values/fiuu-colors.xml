@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <color name="fiuu_primary">#0B5FFF</color>
+  <color name="fiuu_accent">#00B7D5</color>
+  <color name="fiuu_status">#00827C</color>
+  <color name="fiuu_nav">#ffffff</color>
+</resources>
